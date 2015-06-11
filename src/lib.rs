@@ -146,7 +146,9 @@ pub mod test {
     #![feature(test)]
     extern crate test;
 
-    use super::{block_swap, reverse, rotate};
+    use std::ops::Range;
+    use std::cmp::Ord;
+    use super::{block_swap, reverse, rotate, binary_first, binary_last};
 
     #[test]
     fn test_blockswap() {
@@ -221,5 +223,34 @@ pub mod test {
         assert_eq!(arr2, swaped2);
     }
 
+    fn bin_first<T>(array: &[T], range: Range<usize>, value: T) -> usize
+        where T: Ord {
+        binary_first(array, range, value, |a, b| a.cmp(b))
+    }
+
+    #[test]
+    fn test_bin_first() {
+        let find = [0, 1, 2, 3, 4];
+        assert_eq!(bin_first(&find, (1..4), 2), 2);
+        let multiple = [0, 2, 2, 3, 4];
+        assert_eq!(bin_first(&multiple, (1..4), 2), 1);
+        let not_found = [0, 2, 2, 3, 4];
+        assert_eq!(bin_first(&multiple, (1..4), -3), 1);
+    }
+
+    fn bin_last<T>(array: &[T], range: Range<usize>, value: T) -> usize
+        where T: Ord {
+        binary_last(array, range, value, |a, b| a.cmp(b))
+    }
+
+    #[test]
+    fn test_bin_last() {
+        let find = [0, 1, 2, 3, 4];
+        assert_eq!(bin_last(&find, (1..4), 2), 3);
+        let multiple = [0, 2, 2, 3, 4];
+        assert_eq!(bin_last(&multiple, (1..4), 2), 3);
+        let not_found = [0, 2, 2, 3, 4];
+        assert_eq!(bin_last(&multiple, (1..4), -3), 1);
+    }
 
 }
