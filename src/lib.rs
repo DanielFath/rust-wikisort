@@ -1,8 +1,8 @@
+#![feature(test)]
 use std::cmp::Ordering;
-use std::ptr::swap;
 use std::ops::Range;
 
-
+#[inline]
 fn block_swap<T>(array: &mut [T], index1: usize, index2: usize, count: usize) {
     for ind in 0..count {
         array.swap(index1+ind, index2+ind);
@@ -124,6 +124,9 @@ fn main() {
 
 #[cfg(test)]
 pub mod test {
+    #![feature(test)]
+    extern crate test;
+
     use super::{block_swap, reverse, rotate};
 
     #[test]
@@ -132,6 +135,17 @@ pub mod test {
         block_swap(&mut arr, 0, 10, 5);
         let swaped = [10,11,12,13,14,5,6,7,8,9,0,1,2,3,4];
         assert_eq!(arr, swaped);
+    }
+
+    #[bench]
+    fn bench_blockswap(b: &mut test::Bencher) {
+        let mut arr = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+        b.iter(|| {
+            let n = test::black_box(1000);
+            for _ in 0..n {
+                block_swap(&mut arr, 0, 10, 5);
+            }
+        });
     }
 
     #[test]
@@ -145,6 +159,29 @@ pub mod test {
         reverse(&mut arr2, (4..8));
         let swaped2 = [0,1,2,3,7,6,5,4,8,9,10,11,12,13,14];
         assert_eq!(arr2, swaped2);
+    }
+
+
+    #[bench]
+    fn bench_reverse(b: &mut test::Bencher) {
+        let mut arr = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+        b.iter(|| {
+            let n = test::black_box(1000);
+            for _ in 0..n {
+                reverse(&mut arr, (0..13));
+            };
+        });
+    }
+
+    #[bench]
+    fn bench_reverse_native(b: &mut test::Bencher) {
+        let mut arr = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+        b.iter(|| {
+            let n = test::black_box(1000);
+            for _ in 0..n {
+                arr.reverse();
+            };
+        });
     }
 
     #[test]
@@ -164,4 +201,6 @@ pub mod test {
         let swaped2 = [0,1,4,2,3,5,6];
         assert_eq!(arr2, swaped2);
     }
+
+
 }
