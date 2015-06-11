@@ -43,6 +43,18 @@ fn rotate<T>(array: &mut [T], range: Range<usize>, amount: isize) {
     reverse(array, range);
 }
 
+#[inline]
+fn linear_search<T>(array: &mut [T], range: Range<usize>, needle: T) -> Option<usize>
+    where T: PartialEq + PartialOrd {
+
+    for index in range {
+        if array[index] == needle {
+            return Some(index);
+        }
+    }
+    None
+}
+
 fn binary_first<T,F>(array: &[T], range: Range<usize>, value: T, compare: F) -> usize
     where F: Fn(&T, &T) -> Ordering {
 
