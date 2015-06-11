@@ -9,27 +9,31 @@ fn block_swap<T>(array: &mut [T], index1: usize, index2: usize, count: usize) {
     }
 }
 
-fn reverse<T>(array: &mut [T], range: Range<i64>) {
-    let mut ind = ((range.end-range.start)/ 2) -1;
-    loop{
-        if ind < 0 {
-            break;
-        }
-
-        let ind_a = (range.start + ind) as usize;
-        let ind_b = (range.end - ind - 1) as usize;
+fn reverse<T>(array: &mut [T], range: Range<usize>) {
+    if range.len() < 2 {
+        // We don't want max_ind to overflow, plus
+        // reversing a 0 or 1 range is pointless.
+        return
+    }
+    // I reversed the formula for reversing so it doesn't requires casting to and
+    // from unsigned to signed and back again.
+    let max_ind = (range.len()/2) -1;
+    let mut ind = 0;
+    while ind <= max_ind {
+        let ind_a = range.start + ind;
+        let ind_b = range.end - ind -1;
         array.swap(ind_a, ind_b);
 
-        ind -= 1;
+        ind += 1;
     }
 }
 
-fn rotate<T>(array: &mut [T], range: Range<i64>, amount: isize) {
+fn rotate<T>(array: &mut [T], range: Range<usize>, amount: isize) {
 
     let split = if amount >= 0 {
-        range.start + amount as i64
+        range.start + (amount as usize)
     } else {
-        range.end + amount as i64
+        range.end - (amount.abs() as usize)
     };
 
     let range1 = range.start..split;
@@ -39,64 +43,67 @@ fn rotate<T>(array: &mut [T], range: Range<i64>, amount: isize) {
     reverse(array, range);
 }
 
-fn binary_first<T,F>(array: &mut [T], range: Range<i64>, value: T, compare: &F) -> usize
+fn binary_first<T,F>(array: &[T], range: Range<usize>, value: T, compare: F) -> usize
     where F: Fn(&T, &T) -> Ordering {
 
     let mut start = range.start;
-    let mut end = range.end;
+    let mut end = range.end - 1;
     while start < end {
         let mid = start + (end - start)/2;
-        if compare(&array[mid as usize], &value) != Ordering::Less {
+        // i.e. array[mid] < value
+        if compare(&array[mid], &value) == Ordering::Less {
             start = mid + 1
         } else {
             end = mid
         };
 
     }
-    if start == range.end
-        && compare(&array[start as usize], &value) == Ordering::Less {
+
+    // i.e. if (start == range.end && array[start] < value)
+    if start == range.end && compare(&array[start], &value) == Ordering::Less {
         start += 1;
     }
-    return start as usize;
+    return start;
 }
 
-fn binary_last<T,F>(array: &mut [T], range: Range<i64>, value: T, compare: &F) -> usize
+fn binary_last<T,F>(array: &[T], range: Range<usize>, value: T, compare: F) -> usize
     where F: Fn(&T, &T) -> Ordering {
 
     let mut start = range.start;
-    let mut end = range.end;
+    let mut end = range.end -1;
     while start < end {
         let mid = start + (end - start)/2;
-        if compare(&array[mid as usize], &value) != Ordering::Greater {
+        // i.e. array[mid] <= value
+        if compare(&array[mid], &value) != Ordering::Greater {
             start = mid + 1
         } else {
             end = mid
         };
 
     }
-    if start == range.end
-             && compare(&array[start as usize], &value) != Ordering::Greater {
+    // i.e. if (start == range.end && array[start] <= value)
+    if start == range.end  && compare(&array[start], &value) != Ordering::Greater {
         start += 1;
     }
-    return start as usize;
+    return start;
 }
 
-fn insertion_sort_helper<T,F>(array: &mut [T], range: Range<i64>, compare: &F)
+fn insertion_sort_helper<T,F>(array: &mut [T], range: Range<usize>, compare: &F)
     where F: Fn(&T, &T) -> Ordering {
 
     let (mut i, len) = (range.start +1, range.end);
     while i < len {
         let mut j = i;
         while j > range.start
-                && compare(&array[(j-1) as usize], &array[j as usize]) == Ordering::Greater {
-            array.swap(j as usize, (j-1) as usize);
+                && compare(&array[(j-1)], &array[j]) == Ordering::Greater {
+            array.swap(j, (j-1));
             j -= 1;
         }
         i += 1;
     }
 }
 
-fn insertion_sort_by<T,F>(array: &mut [T], range: Range<i64>, compare: F)
+fn insertion_sort_by<T,F>(array: &mut [T], range: Range<usize>, compare: F)
     where F: Fn(&T, &T) -> Ordering {
     if array.len() <= 1 {
         return;
@@ -109,7 +116,7 @@ fn insertion_sort_by<T,F>(array: &mut [T], range: Range<i64>, compare: F)
     insertion_sort_helper(array, range, &compare);
 }
 
-fn insertion_sort<T>(array: &mut[T], range: Range<i64>)
+fn insertion_sort<T>(array: &mut[T], range: Range<usize>)
     where T: Ord {
     insertion_sort_by(array, range, |a, b| a.cmp(b));
 }
