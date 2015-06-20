@@ -1,5 +1,6 @@
 #![feature(test)]
 use std::cmp::Ordering;
+use std::cmp::Ordering::*;
 use std::ops::Range;
 
 #[inline]
@@ -63,7 +64,7 @@ fn binary_first<T,F>(array: &[T], range: Range<usize>, value: T, compare: F) -> 
     while start < end {
         let mid = start + (end - start)/2;
         // i.e. array[mid] < value
-        if compare(&array[mid], &value) == Ordering::Less {
+        if compare(&array[mid], &value) == Less {
             start = mid + 1
         } else {
             end = mid
@@ -72,7 +73,7 @@ fn binary_first<T,F>(array: &[T], range: Range<usize>, value: T, compare: F) -> 
     }
 
     // i.e. if (start == range.end && array[start] < value)
-    if start == range.end && compare(&array[start], &value) == Ordering::Less {
+    if start == range.end && compare(&array[start], &value) == Less {
         start += 1;
     }
     return start;
@@ -86,7 +87,7 @@ fn binary_last<T,F>(array: &[T], range: Range<usize>, value: T, compare: F) -> u
     while start < end {
         let mid = start + (end - start)/2;
         // i.e. array[mid] <= value
-        if compare(&array[mid], &value) != Ordering::Greater {
+        if compare(&array[mid], &value) != Greater {
             start = mid + 1
         } else {
             end = mid
@@ -94,7 +95,7 @@ fn binary_last<T,F>(array: &[T], range: Range<usize>, value: T, compare: F) -> u
 
     }
     // i.e. if (start == range.end && array[start] <= value)
-    if start == range.end  && compare(&array[start], &value) != Ordering::Greater {
+    if start == range.end  && compare(&array[start], &value) != Greater {
         start += 1;
     }
     return start;
@@ -107,7 +108,7 @@ fn insertion_sort_helper<T,F>(array: &mut [T], range: Range<usize>, compare: &F)
     while i < len {
         let mut j = i;
         while j > range.start
-                && compare(&array[(j-1)], &array[j]) == Ordering::Greater {
+                && compare(&array[(j-1)], &array[j]) == Greater {
             array.swap(j, (j-1));
             j -= 1;
         }
