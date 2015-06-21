@@ -146,39 +146,90 @@ fn insertion_sort<T>(array: &mut[T], range: Range<usize>)
     insertion_sort_by(array, range, |a, b| a.cmp(b));
 }
 
-fn merge_sort_by<T,F>(array: &mut [T], range: Range<usize>, compare: F)
+// We use helper to avoid infinite recursion in types
+fn merge_sort_helper<T,F>(array: &mut [T], range: Range<usize>, compare: F)
     where F: Fn(&T, &T) -> Ordering {
+
+    let mut temp_vec = Vec::with_capacity(array.len());
+    let mut buf = temp_vec.as_mut();
+    merge_sort_by(array, range, &compare, &mut buf);
+}
+
+fn merge_sort_by<T,F>(array: &mut [T], range: Range<usize>, compare: &F, buf: &mut[T])
+    where F: Fn(&T, &T) -> Ordering {
+
 
     if range.len() == 2 {
         if compare(&array[range.start], &array[range.end-1]) == Less {
             array.swap(range.start, range.end);
         }
     } else if range.len() > 2 {
-        let mid = range.start + range.len()/2;
-        merge_sort_by(array,(range.start..mid), &compare);
-        merge_sort_by(array,(mid..range.end), &compare);
-        merge(array, (range.start..mid), (mid..range.end), &compare);
+        let mid = range.start + (range.end-range.start)/2;
+        merge_sort_by(array,(range.start..mid), compare, buf);
+        merge_sort_by(array,(mid..range.end), compare, buf);
+        merge(array, range.start..mid, mid..range.end, compare, buf);
     }
 }
 
-fn merge<T,F>(array: &mut [T], a: Range<usize>, b: Range<usize>, compare: F)
+#[inline]
+fn merge<T,F>(array: &mut [T], a: Range<usize>, b: Range<usize>, compare: F, buf: &mut[T])
     where F: Fn(&T, &T) -> Ordering {
 
-    //TODO implement
+    use std::ptr;
+
+    let mut a_count = 0;
+    let mut b_count = 0;
+    let mut insert = 0;
+
+    if a.len() == 0 || b.len() == 0 {
+        return;
+    }
+
+
+    // Copy values from A into buffer
+    unsafe {
+        ptr::copy(&array[a.start], &buf, 1);
+    }
+
+    //println!("Copy value array[{:?}] into buf[0] for a.len() {:?} ", a.start, a.len());
+   //println!("buf{:?}", &buf);
+
+    while a_count < a.len() && b_count < b.len() {
+        // if (buffer[a_count] <= array[b.start + b_count])
+        if compare(&buf[a_count], &array[b.start + b_count]) != Greater {
+            unsafe {
+                ptr::copy_nonoverlapping(&buf[a_count], &mut array[a.start+insert], 1);
+            }
+            a_count += 1;
+        } else {
+            unsafe {
+                ptr::copy_nonoverlapping(&array[b.start + b_count], &mut array[a.start+insert], 1);
+            }
+            b_count += 1;
+        }
+        insert += 1;
+    }
+    // Copy values from B into A
+    unsafe {
+        ptr::copy_nonoverlapping(&buf[a_count], &mut array[a.start + insert], a.len() - a_count);
+    }
+
 }
 
 fn merge_sort<T>(array: &mut[T], range: Range<usize>)
     where T: Ord{
 
-    merge_sort_by(array, range, |a, b| a.cmp(b));
+
+    merge_sort_helper(array, range, |a, b| a.cmp(b));
 }
 
 fn main() {
-    let mut arr = [6,2,5,4,3,1,0];
+    let mut arr = [6,2,5,4];
     println!("{:?}", arr);
-    insertion_sort(&mut arr, (0..3));
+    merge_sort(&mut arr, 0..3);
+    //test_type(|a,b| a.cmp(b), &mut arr);
     println!("{:?}", arr);
-    let range = (0..1);
+    let range = 0..1;
     println!("range:{:?}\nstart:{:?}\nend:{:?}\nlen:{:?}", range, range.start, range.end, range.len());
 }
 
