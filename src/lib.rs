@@ -18,9 +18,8 @@ fn reverse<T>(array: &mut [T], range: Range<usize>) {
     }
     // I reversed the formula for reversing so it doesn't requires casting to and
     // from unsigned to signed and back again.
-    let max_ind = (range.len()/2) -1;
     let mut ind = 0;
-    while ind <= max_ind {
+    while ind <= (range.len()/2) -1 {
         let ind_a = range.start + ind;
         let ind_b = range.end - ind -1;
         array.swap(ind_a, ind_b);
@@ -37,6 +36,7 @@ fn rotate<T>(array: &mut [T], range: Range<usize>, amount: isize) {
         range.end - (amount.abs() as usize)
     };
 
+    assert!(range.start < split && split < range.end);
     let range1 = range.start..split;
     let range2 = split..range.end;
     reverse(array, range1);
@@ -118,12 +118,12 @@ fn insertion_sort_helper<T,F>(array: &mut [T], range: Range<usize>, compare: &F)
 
 fn insertion_sort_by<T,F>(array: &mut [T], range: Range<usize>, compare: F)
     where F: Fn(&T, &T) -> Ordering {
+
     if array.len() <= 1 {
         return;
     }
-    if range.start > range.end {
-        panic!("Range start must be lesser than end");
-    } else if range.start == range.end {
+    // We only sort a regular range
+    if range.start >= range.end {
         return;
     }
     insertion_sort_helper(array, range, &compare);
