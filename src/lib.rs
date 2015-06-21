@@ -79,6 +79,16 @@ fn binary_first<T,F>(array: &[T], range: Range<usize>, value: T, compare: F) -> 
     return start;
 }
 
+fn floor_power_of_two(value: usize) -> usize{
+    let mut x = value;
+    x |= x >> 1;
+    x |= x >> 2;
+    x |= x >> 4;
+    x |= x >> 8;
+    x |= x >> 16;
+    x - (x >> 1)
+}
+
 fn binary_last<T,F>(array: &[T], range: Range<usize>, value: T, compare: F) -> usize
     where F: Fn(&T, &T) -> Ordering {
 
@@ -149,7 +159,9 @@ pub mod test {
 
     use std::ops::Range;
     use std::cmp::Ord;
-    use super::{block_swap, reverse, rotate, binary_first, binary_last};
+    use super::{
+        block_swap, reverse, rotate, binary_first, binary_last,floor_power_of_two
+    };
 
     #[test]
     fn test_blockswap() {
@@ -252,6 +264,17 @@ pub mod test {
         assert_eq!(bin_last(&multiple, (1..4), 2), 3);
         let not_found = [0, 2, 2, 3, 4];
         assert_eq!(bin_last(&multiple, (1..4), -3), 1);
+    }
+
+    #[test]
+    fn test_floor() {
+        // Add code here
+        assert_eq!(floor_power_of_two(1), 1);
+        assert_eq!(floor_power_of_two(2), 2);
+        assert_eq!(floor_power_of_two(3), 2);
+        assert_eq!(floor_power_of_two(5), 4);
+        assert_eq!(floor_power_of_two(63), 32);
+        assert_eq!(floor_power_of_two(64), 64);
     }
 
 }
