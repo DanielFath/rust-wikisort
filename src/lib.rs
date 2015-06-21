@@ -10,6 +10,7 @@ fn block_swap<T>(array: &mut [T], index1: usize, index2: usize, count: usize) {
     }
 }
 
+
 fn reverse<T>(array: &mut [T], range: Range<usize>) {
     if range.len() < 2 {
         // We don't want max_ind to overflow, plus
@@ -141,7 +142,35 @@ fn insertion_sort_by<T,F>(array: &mut [T], range: Range<usize>, compare: F)
 
 fn insertion_sort<T>(array: &mut[T], range: Range<usize>)
     where T: Ord {
+
     insertion_sort_by(array, range, |a, b| a.cmp(b));
+}
+
+fn merge_sort_by<T,F>(array: &mut [T], range: Range<usize>, compare: F)
+    where F: Fn(&T, &T) -> Ordering {
+
+    if range.len() == 2 {
+        if compare(&array[range.start], &array[range.end-1]) == Less {
+            array.swap(range.start, range.end);
+        }
+    } else if range.len() > 2 {
+        let mid = range.start + range.len()/2;
+        merge_sort_by(array,(range.start..mid), &compare);
+        merge_sort_by(array,(mid..range.end), &compare);
+        merge(array, (range.start..mid), (mid..range.end), &compare);
+    }
+}
+
+fn merge<T,F>(array: &mut [T], a: Range<usize>, b: Range<usize>, compare: F)
+    where F: Fn(&T, &T) -> Ordering {
+
+    //TODO implement
+}
+
+fn merge_sort<T>(array: &mut[T], range: Range<usize>)
+    where T: Ord{
+
+    merge_sort_by(array, range, |a, b| a.cmp(b));
 }
 
 fn main() {
@@ -149,6 +178,8 @@ fn main() {
     println!("{:?}", arr);
     insertion_sort(&mut arr, (0..3));
     println!("{:?}", arr);
+    let range = (0..1);
+    println!("range:{:?}\nstart:{:?}\nend:{:?}\nlen:{:?}", range, range.start, range.end, range.len());
 }
 
 
