@@ -10,6 +10,17 @@ fn block_swap<T>(array: &mut [T], index1: usize, index2: usize, count: usize) {
     }
 }
 
+fn array_copy<T>(src:&[T], src_pos: usize, dst: &mut[T], dst_pos: usize, len: usize) {
+    use std::ptr;
+
+    assert!(src_pos+len < src.len());
+    assert!(dst_pos+len < dst.len());
+
+    unsafe {
+        // TODO check if it works
+        ptr::copy(&src[src_pos], &mut dst[dst_pos], len);
+    }
+}
 
 fn reverse<T>(array: &mut [T], range: Range<usize>) {
     if range.len() < 2 {
@@ -148,15 +159,20 @@ fn insertion_sort<T>(array: &mut[T], range: Range<usize>)
 
 // We use helper to avoid infinite recursion in types
 fn merge_sort_helper<T,F>(array: &mut [T], range: Range<usize>, compare: F)
-    where F: Fn(&T, &T) -> Ordering {
+    where F: Fn(&T, &T) -> Ordering, T: Debug {
 
-    let mut temp_vec = Vec::with_capacity(array.len());
-    let mut buf = temp_vec.as_mut();
-    merge_sort_by(array, range, &compare, &mut buf);
+    let mut temp_vec = unsafe {
+        // Allocate and set capacity
+        let mut temp = Vec::with_capacity(array.len());
+        temp.set_len(array.len());
+        temp
+    };
+
+    merge_sort_by(array, range, &compare, &mut temp_vec);
 }
 
 fn merge_sort_by<T,F>(array: &mut [T], range: Range<usize>, compare: &F, buf: &mut[T])
-    where F: Fn(&T, &T) -> Ordering {
+    where F: Fn(&T, &T) -> Ordering, T: Debug {
 
 
     if range.len() == 2 {
@@ -171,11 +187,24 @@ fn merge_sort_by<T,F>(array: &mut [T], range: Range<usize>, compare: &F, buf: &m
     }
 }
 
+use std::fmt::Debug;
+
+fn print_array<T: Debug>(array: &[T]) {
+    print!("[");
+    for i in 0..array.len() {
+        print!("{:?}, ", array[i]);
+    }
+    print!("]\n");
+}
+
 #[inline]
 fn merge<T,F>(array: &mut [T], a: Range<usize>, b: Range<usize>, compare: F, buf: &mut[T])
-    where F: Fn(&T, &T) -> Ordering {
+    where F: Fn(&T, &T) -> Ordering, T:Debug {
 
     use std::ptr;
+
+    println!("Range a: {:?}", a);
+    println!("Range b: {:?}", b);
 
     let mut a_count = 0;
     let mut b_count = 0;
@@ -188,14 +217,16 @@ fn merge<T,F>(array: &mut [T], a: Range<usize>, b: Range<usize>, compare: F, buf
 
     // Copy values from A into buffer
     unsafe {
-        ptr::copy(&array[a.start], &buf, 1);
+   //     ptr::copy_nonoverlapping(&array[a.start], buf, array.len());
     }
 
-    //println!("Copy value array[{:?}] into buf[0] for a.len() {:?} ", a.start, a.len());
-   //println!("buf{:?}", &buf);
-
     while a_count < a.len() && b_count < b.len() {
+        
+        print_array(&array);
+        print_array(&buf);
+
         // if (buffer[a_count] <= array[b.start + b_count])
+
         if compare(&buf[a_count], &array[b.start + b_count]) != Greater {
             unsafe {
                 ptr::copy_nonoverlapping(&buf[a_count], &mut array[a.start+insert], 1);
@@ -217,20 +248,44 @@ fn merge<T,F>(array: &mut [T], a: Range<usize>, b: Range<usize>, compare: F, buf
 }
 
 fn merge_sort<T>(array: &mut[T], range: Range<usize>)
-    where T: Ord{
+    where T: Ord+Debug+Clone {
 
 
-    merge_sort_helper(array, range, |a, b| a.cmp(b));
+    //merge_sort_helper(array, range, |a, b| a.cmp(b));
 }
 
 fn main() {
-    let mut arr = [6,2,5,4];
+    let mut arr = &[6i32,2,5,4];
+
+    let mut temp_vec: Vec<i32> = Vec::with_capacity(4);
+    let mut buf_dat = temp_vec.as_mut_ptr();
+    let mut buf_tmp = unsafe { buf_dat.offset(4)};
+
+    //array_copy(arr, 0, cp, 0, 2);
+
+    unsafe {
+        use std::ptr;
+        use std::slice;
+
+        println!("{:?}", arr);
+        //ptr::copy(arr.as_ptr().offset(0), buf_dat.offset(0), 4);
+        //ptr::copy_nonoverlapping(arr.as_ptr().offset(0), buf_dat.offset(0), 4);
+        //temp_vec.set_len(4);
+        let mut arr2 = slice::from_raw_parts(buf_dat.offset(0), 4);
+        println!("{:?}", temp_vec);
+        println!("{:?}", buf_dat);
+        println!("{:?}", arr2);
+
+    }
+    //println!("{:?}", buf_dat.size);
+    /*
     println!("{:?}", arr);
     merge_sort(&mut arr, 0..3);
     //test_type(|a,b| a.cmp(b), &mut arr);
     println!("{:?}", arr);
     let range = 0..1;
     println!("range:{:?}\nstart:{:?}\nend:{:?}\nlen:{:?}", range, range.start, range.end, range.len());
+*/
 }
 
 
